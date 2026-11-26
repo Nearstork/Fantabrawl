@@ -1,0 +1,137 @@
+
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fantabrawl</title>
+<style>
+body{margin:0;background:#171529;color:white;font-family:Arial;text-align:center}
+header{padding:25px;background:#292344}
+h1{color:#ffd45c;font-size:38px}
+nav{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;padding:15px}
+button{background:#ffd45c;border:0;border-radius:10px;padding:12px;font-weight:bold;cursor:pointer}
+input{padding:12px;border-radius:8px;border:0;margin:5px;max-width:85%}
+section{max-width:650px;margin:15px auto;padding:20px;background:#292344;border-radius:16px}
+.card{background:#393252;padding:13px;margin:10px;border-radius:12px}
+.small{color:#c9c3dc;font-size:13px}
+</style>
+</head>
+<body>
+<header>
+<h1>⭐ FANTABRAWL ⭐</h1>
+<p>LA TUA LEGA DI BRAWL STARS</p>
+</header>
+
+<nav>
+<button onclick="show('mercato')">Mercato</button>
+<button onclick="show('squadre')">Squadre</button>
+<button onclick="show('classifica')">Classifica</button>
+</nav>
+
+<section>
+<h2 id="titolo">Mercato Brawler</h2>
+<p class="small">Lega: Fantabrawl Champions</p>
+<div id="contenuto"></div>
+</section>
+
+<script>
+const brawlers=[
+"Chester","Cordelius","Shelly","Colt","Spike",
+"Leon","Crow","Edgar","Mortis","Dynamike",
+"Surge","8-Bit","Poco","Kenji","Lily"
+];
+
+let players=JSON.parse(localStorage.getItem("fb_players")||"[]");
+let picks=JSON.parse(localStorage.getItem("fb_picks")||"{}");
+let points=JSON.parse(localStorage.getItem("fb_points")||"{}");
+let current="mercato";
+
+function save(){
+ localStorage.setItem("fb_players",JSON.stringify(players));
+ localStorage.setItem("fb_picks",JSON.stringify(picks));
+ localStorage.setItem("fb_points",JSON.stringify(points));
+}
+
+function show(page){
+ current=page;
+ document.getElementById("titolo").textContent=
+ page==="mercato"?"⭐ Mercato Brawler":
+ page==="squadre"?"👥 Squadre":"🏆 Classifica";
+ render();
+}
+
+function render(){
+ let box=document.getElementById("contenuto");
+ box.innerHTML="";
+
+ if(current==="mercato"){
+ box.innerHTML=`
+ <p>Inserisci il tuo nome</p>
+ <input id="nome" placeholder="Il tuo nome">
+ <button onclick="join()">Entra</button>
+ <p class="small">Ogni Brawler può essere scelto una sola volta.</p>`;
+ brawlers.forEach(b=>{
+ let taken=picks[b];
+ let div=document.createElement("div");
+ div.className="card";
+ div.innerHTML=`<b>${b}</b><br><br>`;
+ let info=document.createElement("span");
+ info.textContent=taken?"Scelto da "+taken:"Disponibile";
+ div.appendChild(info);
+ if(!taken){
+ let btn=document.createElement("button");
+ btn.textContent="Scegli";
+ btn.onclick=()=>pick(b);
+ div.appendChild(document.createElement("br"));
+ div.appendChild(btn);
+ }
+ box.appendChild(div);
+ });
+ }
+
+ if(current==="squadre"){
+ if(!players.length)box.textContent="Nessuna squadra ancora.";
+ players.forEach(p=>{
+ let div=document.createElement("div");
+ div.className="card";
+ let names=Object.entries(picks)
+ .filter(([b,n])=>n===p).map(([b])=>b);
+ div.innerHTML="<b>"+p+"</b><p>"+(names.join(", ")||"Nessun Brawler")+"</p>";
+ box.appendChild(div);
+ });
+ }
+
+ if(current==="classifica"){
+ let sorted=[...players].sort((a,b)=>(points[b]||0)-(points[a]||0));
+ sorted.forEach((p,i)=>{
+ let div=document.createElement("div");
+ div.className="card";
+ div.textContent=(i+1)+"° "+p+" — "+(points[p]||0)+" punti";
+ box.appendChild(div);
+ });
+ }
+}
+
+function join(){
+ let n=document.getElementById("nome").value.trim();
+ if(!n)return alert("Scrivi il tuo nome!");
+ if(players.includes(n))return alert("Nome già presente!");
+ if(players.length>=8)return alert("Lega piena!");
+ players.push(n);points[n]=0;save();render();
+}
+
+function pick(b){
+ let n=document.getElementById("nome")?.value.trim();
+ if(!n||!players.includes(n)){
+ alert("Prima entra nella lega dalla casella del nome!");
+ return;
+ }
+ if(picks[b])return alert("Questo Brawler è già stato scelto!");
+ picks[b]=n;save();render();
+}
+
+show("mercato");
+</script>
+</body>
+</html>
